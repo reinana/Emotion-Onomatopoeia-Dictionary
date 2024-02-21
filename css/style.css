@@ -1,0 +1,39 @@
+.bg-red{
+    background-color: red;
+}
+.bg-orange{
+    background-color: orange;
+}
+.bg-pink{
+    background-color: pink;
+}
+.bg-lightblue{
+    background-color: lightblue;
+}
+.bg-gray{
+    background-color: gray;
+}
+.bg-green{
+    background-color: green;
+}
+.bg-purple{
+    background-color: purple;
+}
+.bg-grey{
+    background-color: grey;
+}
+
+.imgFit {
+    object-fit: contain;
+}
+a,a:visited, a:hover{
+    text-decoration: none;
+    color: white;
+    height: 100%;
+}
+.emoji {
+    font-size: 2.5rem;
+    padding: 0;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
