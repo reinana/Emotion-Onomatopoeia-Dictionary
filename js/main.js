@@ -4,6 +4,20 @@ class Word {
         this.definition = definition;
         this.pictureUrl = pictureUrl;
     }
+
+    // onomatopoeia のカード１枚を作成する
+    generateCardHtml() {
+        return `
+            <div class="d-flex col-md-5 col-12 bg-white px-0 my-2">
+                <div class="col-8">
+                    <h4 class="pt-3">${this.word}</h4>
+                    <p class="pt-2">${this.definition}</p>
+                </div>
+                <div class="d-flex justify-content-center align-items-center col-4 px-0">
+                    <img class="imgFit col-12 p-1" src="${this.pictureUrl}" alt="Image of ${this.word}">
+                </div>
+            </div>`;
+    }
 }
 
 class EmotionObject {
@@ -14,44 +28,78 @@ class EmotionObject {
         this.emoji = emoji;
         this.onomatopoeia = onomatopoeia;
     }
-
+    
+    // 感情のすべての擬音語のWordオブジェクトの配列を返します。 （要件で指定されている関数）
     getOnomatopoeiaWords() {
-        return this.onomatopoeia.map(
-            (onomatope) => new Word(onomatope, dictionary[onomatope], pictureDictionary[onomatope])
-        );
+        return this.onomatopoeia.map(onomatope => new Word(onomatope, dictionary[onomatope], pictureDictionary[onomatope]));
     }
-
+    
+    // （要件で指定されている関数）
+    // コンテナのHTMLを文字列を返します。
+    // このコンテナの背景は感情の色で、コンテナの上部には、感情と感情の説明が表示されています。
+    // 次にこの感情の各擬音語とその定義、画像を含んだカードが表示されます。
     getHtmlContainerString() {
+        // オノマトペの配列
         const onomatopoeiaWords = this.getOnomatopoeiaWords();
-
-        let cardsHtml = onomatopoeiaWords
-            .map(
-                (word) =>
-                    `
-                <div class="d-flex col-md-5 col-12 bg-white px-0 p-3 my-2">
-                    <div class="col-8">
-                        <h4 clas="pt-3">${word.word}</h4>
-                        <p class="pt-2">${word.definition}</p>
+        // 感情が持っているオノマトペのカードのHTML
+        const cardsHtml = onomatopoeiaWords.map(word => word.generateCardHtml()).join("");
+        // 感情ごとのいろ
+        return `
+            <div id="${this.emotion}" class="bg-${this.color}">
+                <div class="container py-3">
+                    <div class="p-3 text-white">
+                        <h2>${this.emotion.toUpperCase()}</h2>
+                        <p>${this.description}</p>
                     </div>
-                    <div class="d-flex justify-content-center align-items-center col-4 px-0">
-                        <img class="imgFit col-12 p-1" src="${word.pictureUrl}" alt="The image of ${word.word} ">
+                    <div class="d-flex justify-content-between flex-wrap">
+                    ${cardsHtml}
                     </div>
                 </div>
-                `
-            )
-            .join("");
+            </div>`;
+    }
+    
+}
 
-        return `<div id="${this.emotion}" class="bg-${this.color}">
-                    <div class="container py-3">
-                        <div class="p-3 text-white">
-                            <h2>${this.emotion.toUpperCase()}</h2>
-                            <p>${this.description}</p>
-                        </div>
-                        <div class="d-flex justify-content-between flex-wrap">
-                        ${cardsHtml}
-                        </div>
-                    </div>
-                </div>`;
+class EmotionUIBuilder {
+    // HTML要素を生成してtargetに追加する共通のメソッド
+    static updateTargetHtml(emotionObjectList, renderFunction, containerClass = '') {
+        // htmlの作成
+        const htmlString = emotionObjectList.map(renderFunction).join("");
+
+        // 外枠が必要な場合は作る
+        const container = document.createElement('div');
+        if (containerClass) container.className = containerClass;
+        container.innerHTML = htmlString;
+
+        // target に追加
+        target.appendChild(container);
+    }
+
+
+    // categoryセクションを作る
+    static generateCategoryElements(emotionObjectList) {
+        // コールバック
+        const renderCategory = (emotion, index) => 
+        `
+            <div class="col-12 col-md-6 col-lg-3 p-4 m-4 text-center text-white bg-${emotion.color}">
+                <a href="#sec${index}" class="text-decoration-none">
+                <h3>${emotion.emotion.toUpperCase()}</h3>
+                <p class="emoji">${emotion.emoji}</p>
+                <p>${emotion.description}</p>
+                </a>
+            </div>
+        `;
+        // targetに追加
+        this.updateTargetHtml(emotionObjectList, renderCategory, "container d-flex justify-content-center flex-wrap");
+    
+    }
+
+    // onomatopoeia セクションを作る
+    static generateOnomatopoeiaElements(emotionObjectList) {
+        // コールバック
+        const renderOnomatopoeia = (emotion, index) => `<div id="sec${index}">${emotion.getHtmlContainerString()}</div>`;
+        // targetに追加する
+        this.updateTargetHtml(emotionObjectList, renderOnomatopoeia);
     }
 }
 
@@ -123,31 +171,5 @@ const emotions = [
 ];
 
 const target = document.getElementById("target");
-// Dom操作は一度だけにする append何度もするとパフォーマンスが落ちる
-class HelperFunction {
-    // category
-    static generateCategoryElements(emotionObjectList) {
-        let containerHtml = emotionObjectList.map((emotion, index) => 
-            `
-                <div class="col-12 col-md-6 col-lg-3 p-4 m-4 text-center text-white bg-${emotion.color}">
-                    <a href="#sec${index}" class="text-decoration-none">
-                        <h3>${emotion.emotion.toUpperCase()}</h3>
-                        <p class="emoji">${emotion.emoji}</p>
-                        <p>${emotion.description}</p>
-                    </a>
-                </div>
-            `).join("");
-        target.innerHTML += `<div class="container d-flex justify-content-center flex-wrap">${containerHtml}</div>`;
-    }
-    // onomatopoeia
-    static generateOnomatopoeiaElements(emotionObjectList) {
-        let onomatopoeiaHtml = emotionObjectList.map((emotion, index) => 
-            `
-                <div id="sec${index}">${emotion.getHtmlContainerString()}</div>
-            `).join("");
-        target.innerHTML += onomatopoeiaHtml;
-    }
-}
-
-HelperFunction.generateCategoryElements(emotions);
-HelperFunction.generateOnomatopoeiaElements(emotions);
+EmotionUIBuilder.generateCategoryElements(emotions);
+EmotionUIBuilder.generateOnomatopoeiaElements(emotions);
